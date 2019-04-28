@@ -1,10 +1,19 @@
-import urllib, urllib.request as urllib2, json, re, datetime, sys, http.cookiejar as cookielib
-import requests
-from lxml import html
-from termcolor import colored
+import datetime
+import http.cookiejar as cookielib
+import json
+import re
 import ssl
-from .. import model
+import sys
+import urllib
+import urllib.request as urllib2
+
+import requests
+from termcolor import colored
+
+from lxml import html
 from pyquery import PyQuery
+
+from .. import model
 
 
 class TweetManager:
@@ -28,7 +37,8 @@ class TweetManager:
 
         while active:
             try:
-                json = TweetManager.get_json_response(tweet_criteria, refresh_cursor, cookiejar, proxy)
+                json = TweetManager.get_json_response(
+                    tweet_criteria, refresh_cursor, cookiejar, proxy)
                 if len(json['items_html'].strip()) == 0:
                     break
 
@@ -45,26 +55,33 @@ class TweetManager:
                     tweetPQ = PyQuery(tweet_html)
                     tweet = model.Tweet()
 
-                    username_tweet = tweetPQ("span:first.username.u-dir b").text()
-                    txt = re.sub(r"\s+", " ", tweetPQ("p.js-tweet-text").text())
+                    username_tweet = tweetPQ(
+                        "span:first.username.u-dir b").text()
+                    txt = re.sub(
+                        r"\s+", " ", tweetPQ("p.js-tweet-text").text())
                     txt = txt.replace('# ', '#')
                     txt = txt.replace('@ ', '@')
 
-                    print(colored("@" + username_tweet + ": ", "red") + colored(txt, "green") + "\n")
+                    print(colored("@" + username_tweet + ": ", "red") +
+                          colored(txt, "green") + "\n")
 
                     retweets = int(tweetPQ("span.ProfileTweet-action--retweet span.ProfileTweet-actionCount").attr(
                         "data-tweet-stat-count").replace(",", ""))
                     favorites = int(tweetPQ("span.ProfileTweet-action--favorite span.ProfileTweet-actionCount").attr(
                         "data-tweet-stat-count").replace(",", ""))
-                    dateSec = int(tweetPQ("small.time span.js-short-timestamp").attr("data-time"))
+                    dateSec = int(
+                        tweetPQ("small.time span.js-short-timestamp").attr("data-time"))
                     id = tweetPQ.attr("data-tweet-id")
                     permalink = tweetPQ.attr("data-permalink-path")
-                    user_id = int(tweetPQ("a.js-user-profile-link").attr("data-user-id"))
+                    user_id = int(
+                        tweetPQ("a.js-user-profile-link").attr("data-user-id"))
 
                     if location_search == True:
-                        page = requests.get('https://twitter.com/tubiity/status/' + id)
+                        page = requests.get(
+                            'https://twitter.com/tubiity/status/' + id)
                         script_geo = html.fromstring(page.content)
-                        location = script_geo.xpath('//a[@class="u-textUserColor js-nav js-geo-pivot-link"]/text()')
+                        location = script_geo.xpath(
+                            '//a[@class="u-textUserColor js-nav js-geo-pivot-link"]/text()')
                         sp_location = ','.join(location)
                         tweet.geo = sp_location
                     else:
@@ -92,8 +109,10 @@ class TweetManager:
                     tweet.date = datetime.datetime.fromtimestamp(dateSec)
                     tweet.retweets = retweets
                     tweet.favorites = favorites
-                    tweet.mentions = " ".join(re.compile('(@\\w*)').findall(tweet.text))
-                    tweet.hashtags = " ".join(re.compile('(#\\w*)').findall(tweet.text))
+                    tweet.mentions = " ".join(
+                        re.compile('(@\\w*)').findall(tweet.text))
+                    tweet.hashtags = " ".join(
+                        re.compile('(#\\w*)').findall(tweet.text))
                     tweet.user_id = user_id
 
                     results.append(tweet)
@@ -138,7 +157,8 @@ class TweetManager:
             if tweet_criteria.topTweets:
                 url = "https://twitter.com/i/search/timeline?q=%s&src=typd&max_position=%s"
 
-        url = url % (urllib.parse.quote(url_data), urllib.parse.quote(refresh_cursor))
+        url = url % (urllib.parse.quote(url_data),
+                     urllib.parse.quote(refresh_cursor))
 
         headers = [
             ('Host', "twitter.com"),
@@ -155,7 +175,8 @@ class TweetManager:
             opener = urllib2.build_opener(urllib2.ProxyHandler({'http': proxy, 'https': proxy}),
                                           urllib2.HTTPCookieProcessor(cookiejar))
         else:
-            opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookiejar))
+            opener = urllib2.build_opener(
+                urllib2.HTTPCookieProcessor(cookiejar))
             opener.addheaders = headers
 
         try:

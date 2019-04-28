@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
 # -*- encoding: utf-8 -*-
 
-import matplotlib.pyplot as pl
-from collections import Counter
-import sqlite3
-import os.path
-import numpy as np
+import getopt
 import json
-from geopy.geocoders import Nominatim
+import os.path
+import sqlite3
+import sys
+from collections import Counter
+
+import matplotlib.pyplot as pl
+import numpy as np
 from flask import Flask, render_template
 from termcolor import colored
 
 import settings
-import sys, getopt
+from geopy.geocoders import Nominatim
 
 ROOT_DIR = os.path.dirname(os.pardir)
 db_path = os.path.join(ROOT_DIR, "TweetAnalysis.db")
@@ -24,7 +26,7 @@ def main(argv):
     if len(argv) == 1 and argv[0] == '-h':
         print("""
                     [Analysis]
-                    
+
  [--location] for location analysis
  [--hashtag]  for hashtag analysis
  [--user]     for user location analysis
@@ -33,7 +35,8 @@ def main(argv):
         return
 
     try:
-        opts, args = getopt.getopt(argv, "", ("hashtag", "user", "location", "h"))
+        opts, args = getopt.getopt(
+            argv, "", ("hashtag", "user", "location", "h"))
 
         for opt, arg in opts:
             if opt == '--location':
@@ -53,7 +56,8 @@ def main(argv):
 def map():
     location = location_analysis()
     api_key = settings.GOOGLE_MAP_API_KEY
-    url = 'https://maps.googleapis.com/maps/api/js?key=' + api_key + '&libraries=visualization&callback=initMap'
+    url = 'https://maps.googleapis.com/maps/api/js?key=' + \
+        api_key + '&libraries=visualization&callback=initMap'
 
     return render_template('locations.html', location=location, url=url)
 
@@ -62,7 +66,8 @@ def analysis_user():
     with sqlite3.connect(db_path) as db:
         conn = db
         c = conn.cursor()
-        c.execute("SELECT  username, count(*) as tekrar FROM Tweet  group by username order by tekrar desc LIMIT 10")
+        c.execute(
+            "SELECT  username, count(*) as tekrar FROM Tweet  group by username order by tekrar desc LIMIT 10")
         data = c.fetchall()
         ilk = []
         y = []

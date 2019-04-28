@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import sys, getopt, parser
+import getopt
+import parser
 import sqlite3
+import sys
+
 from termcolor import colored
 
 conn = sqlite3.connect('TweetAnalysis.db')
@@ -31,11 +34,11 @@ def main(argv):
   """ + colored('# Get tweets by username\n', 'green') +
               """
        python3 tracking.py --username "HaberSau"\n
-      
+
   """ + colored('# Get tweets by query\n', 'green') +
               """
        python3 tracking.py --query "sakarya"\n
-      
+
   """ + colored('# Get twit at a specific date range\n', 'green') + """
        python3 tracking.py --username "HaberSau" --since 2015-09-10 --until 2015-09-12 --maxtweets 10\n
 
@@ -71,8 +74,8 @@ def main(argv):
         print('\n' + colored('[+] Searching...', 'green') + '\n')
 
         def receive_buffer(tweets):
-            locationid = 1;
-            hashtagid = 1;
+            locationid = 1
+            hashtagid = 1
             for t in tweets:
                 hashtagstring = t.hashtags
                 str = hashtagstring.split()
@@ -83,43 +86,53 @@ def main(argv):
                     params_hashag_tweet = (hashtagid, t.id)
                     if hash != "":
                         hashtagid = hashtagid + 1
-                        c.execute("SELECT * FROM hashtag where content = '%s'" % hash)
+                        c.execute(
+                            "SELECT * FROM hashtag where content = '%s'" % hash)
                         exits = c.fetchone()
                         if exits is None:
                             c.execute("SELECT hashtag FROM tweet ")
 
-                            c.execute("INSERT OR IGNORE INTO HashtagTweet VALUES (?,?)", params_hashag_tweet)
-                            c.execute("INSERT OR IGNORE INTO Hashtag  VALUES (?,?)", params_hashtag)
+                            c.execute(
+                                "INSERT OR IGNORE INTO HashtagTweet VALUES (?,?)", params_hashag_tweet)
+                            c.execute(
+                                "INSERT OR IGNORE INTO Hashtag  VALUES (?,?)", params_hashtag)
 
                 params_tweet = (
-                    t.id, t.text, t.username, t.hashtags, t.date.strftime('%Y-%m-%d'), t.date.strftime('%H:%M'),
+                    t.id, t.text, t.username, t.hashtags, t.date.strftime(
+                        '%Y-%m-%d'), t.date.strftime('%H:%M'),
                     t.retweets,
                     t.favorites, t.mentions, t.user_id, locationid)
 
                 c.execute("SELECT * FROM Tweet where tweetid ='%s'" % t.id)
                 userexist = c.fetchone()
                 if userexist is None:
-                    c.execute("INSERT INTO Tweet VALUES (?,?,?,?,?,?,?,?,?,?,?)", params_tweet)
+                    c.execute(
+                        "INSERT INTO Tweet VALUES (?,?,?,?,?,?,?,?,?,?,?)", params_tweet)
 
                 params_location = (locationid, t.geo)
                 c.execute("SELECT * FROM location where place = '%s'" % t.geo)
                 locationexist = c.fetchone()
                 if locationexist is None and t.geo != '':
-                    c.execute("INSERT INTO Location VALUES(?,?)", params_location)
+                    c.execute("INSERT INTO Location VALUES(?,?)",
+                              params_location)
                     locationid = locationid + 1
 
                 c.execute("SELECT * FROM location where place = '%s'" % t.geo)
                 locatuid = c.fetchone()
                 params_user = (t.user_id, t.username, locatuid)
-                c.execute("SELECT * FROM user where username ='%s'" % t.username)
+                c.execute("SELECT * FROM user where username ='%s'" %
+                          t.username)
                 userexist = c.fetchone()
                 if userexist is None:
-                    c.execute("INSERT OR IGNORE INTO User VALUES(?,?,?)", params_user)
+                    c.execute(
+                        "INSERT OR IGNORE INTO User VALUES(?,?,?)", params_user)
 
                 conn.commit()
-            print(colored('\n[+] %d tweet received...\n' % len(tweets), 'green'))
+            print(colored('\n[+] %d tweet received...\n' %
+                          len(tweets), 'green'))
 
-        parser.operation.TweetManager.get_tweets(tweet_criteria, receive_buffer, location_search=location_value)
+        parser.operation.TweetManager.get_tweets(
+            tweet_criteria, receive_buffer, location_search=location_value)
 
     except arg:
         print('You must pass some parameters. Use \"-h\" to help.' + arg)
